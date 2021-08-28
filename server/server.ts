@@ -1,15 +1,22 @@
 import express from 'express';
+import cors from 'cors';
 
 const app = express();
 const PORT = 3001;
 
+app.use(cors());
+
 app.post('/file', (request, response) => {
-    let data = new Buffer('');
+    let data = Buffer.from('');
+
     request.on('data', (chunk) => {
         data = Buffer.concat([data, chunk]);
     });
     request.on('end', () => {
-        response.send(data);
+        response.send({
+            headers: request.headers,
+            data
+        });
     });
 })
 

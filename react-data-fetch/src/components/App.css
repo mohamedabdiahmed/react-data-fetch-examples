@@ -1,0 +1,21 @@
+div {
+      display: flex;
+      flex-direction: column;
+      margin: 10px
+}
+
+button {
+      margin: 10px;
+      height: 50px;
+      border-radius: 10px;
+}
+
+img {
+      align-self: center;
+      width: 100px;
+      height: 100px;
+}
+
+pre {
+      background-color: antiquewhite;
+}
