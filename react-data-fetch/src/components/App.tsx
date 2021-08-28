@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { ChangeEvent, ChangeEventHandler, useState } from 'react';
 import './App.css';
 
 /**
@@ -11,6 +11,7 @@ import importedImage from '../assets/test-image.png'
 export const App = () => {
     const [responseHeaders, setResponseHeaders] = useState();
     const [image, setImage] = useState<string>();
+    const [selectedFile, setSelectedFile] = useState<File>();
 
     const onClickHandler = async () => {
 
@@ -39,12 +40,56 @@ export const App = () => {
 
     const prettyJson = responseHeaders && JSON.stringify(responseHeaders, null, '\t');
 
+    const onClickFormHandler = async () => {
+        if(selectedFile){
+
+            const formData = new FormData();
+            formData.append("somePropName", 'somePropValue');
+            formData.append("someFile", selectedFile);
+
+            const requestOptions = {
+                method: 'POST',
+                body: formData,
+            };
+
+            const response = await fetch('http://localhost:3001/form-file', requestOptions);
+
+            /*
+              NOTE: "file" is not an instance of File - it is a simple object.
+              If you will pass it to URL.createObjectURL(file) - it will fail.
+             */
+            const {somePropName, file, headers} = await response.json();
+
+            setResponseHeaders({
+                somePropName,
+                ...headers,
+            });
+
+            const buffer = file.buffer;
+
+            const Uint8Array =  Buffer.from(buffer);
+            const url = URL.createObjectURL(new Blob([Uint8Array]));
+
+            setImage(url);
+        }
+    };
+
+    const handleInputOnChange = (event:ChangeEvent<HTMLInputElement>) => {
+        if(event.target.files && event.target.files[0]) {
+            setSelectedFile(event.target.files[0]);
+        }
+    };
+
     return (
         <div>
             <img src={image || importedImage}/>
             <button onClick={onClickHandler}>
-                Send a file
+                Send binary file
             </button>
+            <button onClick={onClickFormHandler} disabled={!selectedFile}>
+                Send form data
+            </button>
+            <input type="file" onChange={handleInputOnChange}/>
             <div>
                 <h3>Response from server</h3>
                 <pre>{prettyJson}</pre>
