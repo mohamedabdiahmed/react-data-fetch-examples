@@ -3,62 +3,45 @@ import './App.css';
 
 /**
  * Will be imported as Base64 format
- * You can check more about it here: https://developer.mozilla.org/en-US/docs/Glossary/Base64
+ * You can check more about it here:
+ * https://developer.mozilla.org/en-US/docs/Glossary/Base64
  */
 import importedImage from '../assets/test-image.png'
 
 export const App = () => {
-    const [response, setResponse] = useState();
+    const [responseHeaders, setResponseHeaders] = useState();
     const [image, setImage] = useState<string>();
 
-    const convertArrayBufferToUrl = (arrayBuffer: ArrayBuffer): string => {
-        const Uint8Array = Buffer.from(arrayBuffer);
-        const blob = new Blob([Uint8Array]);
-        return URL.createObjectURL(blob)
-    }
+    const onClickHandler = async () => {
 
-    const handleFetch = async (blob: Blob) => {
-        fetch('http://localhost:3001/file', {
+        // -> 1. We need to convert imported image to blob
+        const imageResponse = await fetch(importedImage)
+        const blob = await imageResponse.blob();
+
+        // -> 2. Upload blob-file to server
+        const requestOptions = {
             method: 'POST',
-            body: blob,
-            headers: {}
-        })
-            .then((response) => response.json())
-            .then(({headers, data}) => {
-                setResponse(headers);
+            body: new Blob([blob]),
+        };
 
+        const response = await fetch('http://localhost:3001/binary-file', requestOptions);
+        const {headers, data} = await response.json();
 
+        setResponseHeaders(headers);
 
-                /*
-                Data will be returned as ArrayBuffer
-                {
-                 type: "Buffer",
-                 data: Array(117)
-                }
-                 */
-                setImage(convertArrayBufferToUrl(data));
-            })
-            .catch((error) => console.log('error', error));
+        // -> 3. Convert server response as ArrayBuffer to URL
+        const Uint8Array = Buffer.from(data);
+        const blobWithoutMIMEType = new Blob([Uint8Array]);
+        const url = URL.createObjectURL(blobWithoutMIMEType)
+
+        setImage(url);
     }
 
-    const convertBase64toBlob = async (callback: (blob: Blob) => void) => {
-        const response = await fetch(importedImage)
-        response
-            .blob()
-            .then((blob) => {
-                callback(blob);
-            })
-    }
-
-    const onClickHandler = () => {
-        convertBase64toBlob(handleFetch);
-    }
-
-    const prettyJson = response && JSON.stringify(response, null, '\t');
+    const prettyJson = responseHeaders && JSON.stringify(responseHeaders, null, '\t');
 
     return (
         <div>
-            <img src={image}/>
+            <img src={image || importedImage}/>
             <button onClick={onClickHandler}>
                 Send a file
             </button>

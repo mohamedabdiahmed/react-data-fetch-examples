@@ -6,7 +6,7 @@ const PORT = 3001;
 
 app.use(cors());
 
-app.post('/file', (request, response) => {
+app.post('/binary-file', (request, response) => {
     let data = Buffer.from('');
 
     request.on('data', (chunk) => {

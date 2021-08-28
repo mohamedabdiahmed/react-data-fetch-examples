@@ -18,4 +18,5 @@ img {
 
 pre {
       background-color: antiquewhite;
+      overflow: hidden;
 }
